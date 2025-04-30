@@ -1,0 +1,27 @@
+#include <iostream>
+#include <cmath> //for the round function
+using namespace std;
+
+int main ()
+{
+  double cm;
+  int inches, yards, feet;
+
+	cout << "Enter a length in centimetres:";
+	cin >> cm;
+
+  inches = cm / 2.54;
+
+cout << cm << "cm is approx. " << inches << " inches";
+
+  //compute the number of yards and what's leftover ...
+	yards = inches / 36;
+  
+	//from what's leftover, compute the number of feet and the remaining inches ... 
+  feet = (inches % 36) / 12;
+  int remaining_inches = ((inches % 36) % 12);
+
+cout << " which is " << yards << " yards, " << feet << " feet and " << remaining_inches << " inches.";
+
+	return 0;
+}
