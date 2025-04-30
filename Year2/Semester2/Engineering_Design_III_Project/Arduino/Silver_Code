@@ -1,0 +1,548 @@
+#include "WiFiS3.h"
+//motor declarations
+const int M1 = 6;                  // Left motor control pin 1 forward
+const int M2 = 7;                  // Left motor control pin 2
+const int M3 = 8;                  // Right motor control pin 1 forward
+const int M4 = 9;                  // Right motor control pin 2
+const int ENABLE_LEFT_PIN = 10;    // Enable pin for left motor
+const int ENABLE_RIGHT_PIN = 11;   // Enable pin for right motor
+//sensors
+const int LEYE = A3;               // Left sensor pin
+const int REYE = A4;               // Right sensor pin
+//wifi declarations
+WiFiServer server(80); // created a wifi server on port 80, this number will be needed for processing to connect to it.
+WiFiClient client; // simply creating a cient
+
+bool isGoPressed = false;// this boolean will be used to check if the button has been pressed to go, allowing us to either execute line following etc, or stop 
+
+// ultrasonics declarations
+const int US_TRIG = 4; // trigger for US sensor will send out a pulse
+const int US_ECHO = 2; // this pin will listen for the pulse
+int loopCount = 0; // loopcount is used to distinguish how many times void loop is ran 
+int distance; // distance of ultrasonics 
+int objectDistance = 0; // object distance for control loop
+long duration; // time for pulse to return
+String stringDistance; // stores distance as string for coms
+//Wheel encoders to measure RPM and distance
+const int Left_Encoder = A2;
+const int Right_Encoder = A1;
+volatile int Encoder_Count_Left = 0; // volatile alerts the compiler this will change by the isr 
+volatile int Encoder_Count_Right = 0;
+double Distance_Travelled = 0;
+String D_travelled;
+double previousDistance = 0;
+// wheel diameter measured at 63.5mm 
+double circumference = 2*PI*(0.0635/2); // circumference in m 
+//speeds of each wheel
+int leftspeed = 200;
+int rightspeed = 200;
+//method 1 PID button counter
+int speedControl1_Counter = 0;
+int speedControl2_Counter = 0;
+int speedControl1_RefSpeed;
+bool speedControl1_pressed = false;
+bool speedControl2_pressed = false;
+// current and previous time for the dt
+unsigned long currentMillis = 0;
+unsigned long previousMillis = 0;
+double currentSpeed = 0;
+
+// Define PID constants for control speed 1
+int speedcontrol2_distance = 15;
+double Kp = 0.75*0.6; // Proportional gain
+double Ki = 0.5*0.1825; // Integral gain
+double Kd = 0.125*0.1825; // Derivative gain
+double previousError = 0;
+double integral = 0;
+double avgSpeed = 0;
+
+//gains for PID 2 
+double Kp2 = 1*0.6;
+double Ki2 = 0.5*6.2585;
+double Kd2 = 0.125*6.2585;
+
+double previousError2 = 0;
+double integral2 = 0;
+// time and position changes
+double dt;
+double dx;
+double previous_refSpeed = 0;
+double previous_Distance = 0;
+//average speed over last 20 loops decs
+unsigned long prevTime = 0;
+double prevDistance = 0;
+
+void setup() {
+  Serial.begin(9600);
+// declaring pins as inputs or outputs accordingly
+  pinMode(LEYE, INPUT);
+  pinMode(REYE, INPUT);
+  pinMode(M1, OUTPUT);
+  pinMode(M2, OUTPUT);
+  pinMode(M3, OUTPUT);
+  pinMode(M4, OUTPUT);
+  pinMode(ENABLE_LEFT_PIN, OUTPUT);
+  pinMode(ENABLE_RIGHT_PIN, OUTPUT);
+  pinMode(US_TRIG, OUTPUT);
+  pinMode(US_ECHO, INPUT);
+  pinMode(Left_Encoder, INPUT);
+  pinMode(Right_Encoder, INPUT_PULLUP);
+  //encoder ISR to detect a change
+  attachInterrupt(digitalPinToInterrupt(Left_Encoder), LeftEncoderISR, CHANGE); // engages our Function when there is a change from high to low
+  attachInterrupt(digitalPinToInterrupt(Right_Encoder), RightEncoderISR, CHANGE);
+
+  char ssid[] = "2E10_AP02"; // this is in the header file, if using hotspot or lab wifi just replace these with strings within ""
+  char pass[] = "TinLizzy";
+  WiFi.begin(ssid, pass); // attempt to make a connection with these credentials
+
+  while (WiFi.status() != WL_CONNECTED) { //allows us to check if connection is not established, will be stuck in this loop
+    delay(500);
+    Serial.print(".");
+  }
+  // if we made it here, a connection has been made
+  Serial.println();
+  Serial.print("Connected to WiFi. IP address: "); // print IP to serial port, this will change depending on the netowrk and must be copied into our processing code
+  Serial.println(WiFi.localIP());
+  server.begin(); // begin the server 
+}
+void LeftEncoderISR() { // ISR for left encoder
+  Encoder_Count_Left++;
+}
+
+void RightEncoderISR() { // ISR for left encoder
+  Encoder_Count_Right++;
+}
+// we should measure both wheels and find the average to account for differences on turning radius
+
+void startMotors() { // function just alerts us that go has been pressed on processing
+  Serial.println("Go button pressed");
+  isGoPressed = true; // updating the boolean to control the main if block in our code below
+}
+
+void stopMotors() { // stops motor
+  Serial.println("Stop button pressed"); // alerts that button is pressed
+  isGoPressed = false; // updated boolean
+  // Stop motors set all logic and enable pins low to ensure no movement.
+  digitalWrite(M1, LOW);
+  digitalWrite(M2, LOW);
+  digitalWrite(M3, LOW);
+  digitalWrite(M4, LOW);
+  analogWrite(ENABLE_LEFT_PIN, 0);
+  analogWrite(ENABLE_RIGHT_PIN, 0);
+  // using the boolean means the buggy will wait until go is pressed no matter how many loops we itterate over
+}
+//toggle on and off speed control mode with each press, we use the control boolean to execute the according code
+void speedControl1() {
+  Serial.println("Speed control method 1 pressed");
+  //Serial.println("control 1 bool is ");
+  //Serial.println(speedControl1_pressed);
+  //this saves us having two buttons
+   speedControl1_Counter++;
+   if (speedControl1_Counter % 2 == 0){
+     speedControl1_pressed = false;
+     // reset speeds to default 
+     leftspeed = 200;
+     rightspeed = 200;
+   }
+   else {
+  speedControl1_pressed = true;
+   }
+}
+
+void speedControl2() {
+  Serial.println("Speed control method 2 pressed");
+  //Serial.println("control 2 bool is ");
+  //Serial.println(speedControl2_pressed);
+  //this saves us having two buttons
+   speedControl2_Counter++;
+   if (speedControl2_Counter % 2 == 0){
+     speedControl2_pressed = false;
+     // reset speeds to default 
+     leftspeed = 200;
+     rightspeed = 200;
+   }
+   else {
+  speedControl2_pressed = true;
+   } 
+}
+
+
+
+void loop() {
+  //declare currents we want to check each loop
+  currentMillis = millis();
+  // update distance_travelled
+  Distance_Travelled = ((Encoder_Count_Left+Encoder_Count_Right)/16.0)*circumference; 
+  // Handle client connection
+  if (!client || !client.connected()) { // alerts us when a client is connected 
+    client = server.available();
+    if (client) {
+      Serial.println("Client connected");
+    }
+  }
+
+  if (client && client.connected()) { 
+    CheckWifiComm();
+  } else { // alerts us if client is not conenected otherwise 
+    Serial.println("Client disconnected");
+    if (client) {
+      client.stop();
+    }
+    
+  }
+  // Steering logic and US sensing
+  // if go is pressed, proceed with line following and object detection code
+  if (isGoPressed) {
+    // debug 
+    /*Serial.print(leftspeed);
+    Serial.println(rightspeed);*/
+    // debug button
+    /*Serial.print("Is Control Button 2 Pressed: ");
+  Serial.println(speedControl2_pressed);
+  Serial.print("Is Control Button 1 Pressed: ");
+  Serial.println(speedControl1_pressed);*/
+
+    //ultrasonic test for object presence
+    if (loopCount % 3 == 0) { // here we can control using loopCount how often to check for objects
+      checkUltrasonics();
+    }
+    
+
+    //line following logic
+    // remember Remember when programming the IR sensors they are Active Low Output: "Active Low" means that the sensor's output signal goes low (or near 0V) when it detects an obstacle. 
+ 
+    int leftSensor = digitalRead(LEYE); // reads each sensor
+    int rightSensor = digitalRead(REYE);
+
+      if (leftSensor == HIGH && rightSensor == HIGH) {
+      moveForward(leftspeed, rightspeed);
+    } else if (leftSensor == LOW && rightSensor == HIGH) {
+      turnLeft(115, 255);
+    } else if (leftSensor == HIGH && rightSensor == LOW) {
+      turnRight(255, 115);
+    } else {
+      moveForward(10, 10);
+    }
+    
+    
+    
+    //if (loopCount % 350 == 0) {
+      //D_travelled = String(Distance_Travelled);
+      //client.write("distance travelled is ");
+      //client.write(D_travelled.c_str());
+      //client.write(" m.\n");
+    //}
+    
+    
+  dx = (Distance_Travelled-previousDistance)*100; //cm
+  dt = (currentMillis - previousMillis)*0.001; // s
+  currentSpeed = dx/dt;
+  previousDistance = Distance_Travelled;
+// MOVED THIS FUNCTIONING TO THE MOVE FORWARD FUNCTION AS IT TENDS TO MESS WITH CORNERING, CORNERING VALUES ARE VERY SPECIFIC.
+  //cehck if control speed 1 is pressed and call the PID
+  /*if(speedControl1_pressed) {
+    controlSpeed1();
+  }*/
+// if we are speed control mode 2, run the speed control function
+// running this while turning a corner could cause errors, uncomment and remove this code from move forward
+  /*if(speedControl2_pressed) {
+    // we don't want a huge error or detecting walls etc
+    if (distance < 40){
+    controlSpeed2();
+    }
+    else { // reset the values to normal until object is detected again
+    //move slow or stop
+    rightspeed = 200;
+    leftspeed = 200;
+    /*Serial.print("leftspeed and right speed are ");
+    Serial.print(leftspeed);
+    Serial.println(rightspeed);
+    }
+  }*/
+
+
+  }
+
+//averaging speed avoids zeros and doubles
+if (loopCount % 15 == 0) {
+  avgSpeedfunc();
+}
+//
+
+//print txt for matlab graphing and calibration
+/*Serial.print(millis()); // Print the timestamp
+Serial.print(", "); // Separate values with a comma
+Serial.print(distance); // Print current speed
+Serial.print(", "); // Separate values with a comma
+Serial.println(speedcontrol2_distance); */// Print reference speed and end the line
+
+//previous updates
+previousMillis = currentMillis;
+previousDistance = Distance_Travelled;
+
+    loopCount++;
+//delay(1000); // Adjust delay as needed for sensor response
+}
+
+
+
+//moving functions
+// Function to move forward at reduced speed
+void moveForward(int left_Speed, int right_Speed) {
+  //speeds cannot exceed 255 for analoguewrite
+  if (left_Speed>255) {
+    left_Speed = 255;
+  }
+  if (right_Speed>255) {
+    right_Speed = 255;
+  }
+  digitalWrite(M1, HIGH);
+  digitalWrite(M2, LOW);
+  digitalWrite(M3, HIGH);
+  digitalWrite(M4, LOW);
+  analogWrite(ENABLE_LEFT_PIN, left_Speed);  // Adjust speed here
+  analogWrite(ENABLE_RIGHT_PIN, right_Speed); // Adjust speed here
+
+  // PID 2 
+if(speedControl2_pressed) {
+    // we don't want a huge error or detecting walls etc
+    if (distance < 40){
+    controlSpeed2();
+    }
+    else { // reset the values to normal until object is detected again
+    //move slow or stop
+    rightspeed = 200;
+    leftspeed = 200;
+    /*Serial.print("leftspeed and right speed are ");
+    Serial.print(leftspeed);
+    Serial.println(rightspeed);*/
+    }
+  }
+// PID 1
+  if(speedControl1_pressed) {
+    controlSpeed1();
+  }
+  
+}
+
+// Function to turn left at slower speed
+void turnLeft(int left_Speed, int right_Speed) {
+   if (left_Speed>255) {
+    left_Speed = 255;
+  }
+  if (right_Speed>255) {
+    right_Speed = 255;
+  }
+
+  digitalWrite(M1, HIGH);
+  digitalWrite(M2, LOW);
+  digitalWrite(M3, HIGH);
+  digitalWrite(M4, LOW);
+  analogWrite(ENABLE_LEFT_PIN, left_Speed);   // Adjust speed here
+  analogWrite(ENABLE_RIGHT_PIN, right_Speed); // Adjust speed here
+}
+
+// Function to turn right at slower speed
+void turnRight(int left_Speed, int right_Speed) {
+   if (left_Speed>255) {
+    left_Speed = 255;
+  }
+  if (right_Speed>255) {
+    right_Speed = 255;
+  }
+
+  digitalWrite(M1, HIGH);
+  digitalWrite(M2, LOW);
+  digitalWrite(M3, HIGH);
+  digitalWrite(M4, LOW);
+  analogWrite(ENABLE_LEFT_PIN, left_Speed);   // Adjust speed here
+  analogWrite(ENABLE_RIGHT_PIN, right_Speed); // Adjust speed here
+}
+
+void checkUltrasonics() {
+  
+  digitalWrite(US_TRIG, LOW);
+      delayMicroseconds(2);
+      //Send high signal from trigger pin
+      digitalWrite(US_TRIG, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(US_TRIG, LOW);
+      //MEASURES HOW LONG THE SIGNAL TAKES TO RETURN. 
+      duration = pulseIn(US_ECHO, HIGH); // gets the duration of the pulse in microseconds
+      distance = duration / 60; // calculates the distance, Sound travels at 343 meters per second, which means it needs 29.155 microseconds per centimeter, the object must travel twice the distance to return.
+
+
+      //stop motors if an object is detected at this set distance
+      if (distance <= 5) {
+        // Stop all motors
+        digitalWrite(M1, LOW);
+        digitalWrite(M2, LOW);
+        digitalWrite(M3, LOW);
+        digitalWrite(M4, LOW);
+        analogWrite(ENABLE_LEFT_PIN, 0);
+        analogWrite(ENABLE_RIGHT_PIN, 0);
+
+        Serial.println("Object detected within 5 cm! Stopping motors."); // this is just for debug
+
+        //send the data to processing to wirelessly display in the serial monitor
+       /*stringDistance = String(distance);// converts to a string
+         client.write("Object detected ");
+         // we need to convert the data to a string and a c style string so that it can be sent by client.write and read by .readstring() (tested without this it didnt work)
+         client.write(stringDistance.c_str());
+         client.write(" cm away\n");*/
+
+        // Wait until object is moved before continuing the loop
+        while (distance <= 5) {
+          //check constantly for distance until it is greater than the minimum 
+          digitalWrite(US_TRIG, LOW);
+          delayMicroseconds(2);
+          digitalWrite(US_TRIG, HIGH);
+          delayMicroseconds(10);
+          digitalWrite(US_TRIG, LOW);
+
+          duration = pulseIn(US_ECHO, HIGH);
+          distance = duration / 60;
+
+        }
+        //Serial.println("Object moved! Resuming motors.");
+      }
+}
+
+//check wifi communication
+void CheckWifiComm() {
+  // ensures client is itialized, not null and is connected
+    while (client.available()) { // while data is available
+    //unlike bronze we change this to a string incase we get double digit numbers from the slider
+      String c = client.readString(); // read in the data
+      int value = c.toInt(); // Convert the received string to an integer if possible 
+      Serial.println(value);
+      // check if it is an integer and update ref speed 
+      if ((value != 0 || c == "0")) {
+        // Process the received integer value
+        speedControl1_RefSpeed = value;
+        Serial.println("Reference speed updated");
+        Serial.println(speedControl1_RefSpeed);
+
+      } 
+
+      // check if is go or stop and call appropriate functions
+      
+      if (c == "g") { 
+        startMotors();
+      } else if (c == "s") {
+        stopMotors();
+      }
+      else if (c == "f") {
+        speedControl1();
+      }
+      else if (c == "k") {
+        speedControl2();
+      }
+    }
+}
+
+void avgSpeedfunc() {
+    unsigned long currTime = millis();
+    double currDistance = Distance_Travelled; // Assuming Distance is declared and updated elsewhere
+    double distDiff = (currDistance - prevDistance)*100;
+    unsigned long timeDiff = (currTime - prevTime);
+    if (timeDiff != 0) { // Avoid division by zero
+        avgSpeed = ((distDiff) / (timeDiff))*(1/0.001);
+      /*
+        Serial.print("Average Speed: ");
+        Serial.println(avgSpeed);
+        Serial.print("cm/s");*/
+        //client.write("Current Speed is ");
+        //client.write(String(avgSpeed).c_str());
+        //client.write(" cm/s \n");
+    }
+    // Update previous values for next iteration
+    prevTime = currTime;
+    prevDistance = currDistance;
+}
+
+//control mode 1 PID
+void controlSpeed1() {
+
+  double error = speedControl1_RefSpeed - currentSpeed; // Calculate error
+
+  // Compute PID terms
+  double proportional = Kp * error;
+  integral += error*dt;
+  double derivative = (error - previousError)/dt;
+
+  //can we overide the output on the first time the reference speed is updated to reduce the error
+
+  double output = proportional + Ki * integral + Kd * derivative;
+
+  //just for the first time after new speed is selected 
+   if (speedControl1_RefSpeed != previous_refSpeed){
+     double start_speed = 
+    output = (speedControl1_RefSpeed- previous_refSpeed)/2;
+  }
+
+  // Apply control output to adjust motor speeds
+  // For simplicity, assume left and right speeds are adjusted simultaneously
+  leftspeed += output;
+  rightspeed += output;
+
+  // Ensure motor speeds are within valid range
+  leftspeed = constrain(leftspeed, 0, 255);
+  rightspeed = constrain(rightspeed, 0, 255);
+
+  // Update previous error for derivative term calculation
+  previousError = error;
+
+  //coms for control loop 1 updates to GUI
+  if (speedControl1_pressed && loopCount % 200 == 0) {
+      
+      client.write("current speed is ");
+      client.write(String(avgSpeed).c_str());
+
+    }
+ previous_refSpeed = speedControl1_RefSpeed;
+
+  //print txt for matlab graphing and calibration
+/*Serial.print(millis()); // Print the timestamp
+Serial.print(", "); // Separate values with a comma
+Serial.print(avgSpeed); // Print current speed
+Serial.print(", "); // Separate values with a comma
+Serial.println(speedControl1_RefSpeed); // Print reference speed and end the line*/
+
+}
+
+
+void controlSpeed2() {
+  objectDistance = distance; // avoids us sending false distances as we cannot be inside here if distance is greater than 40
+  
+  double error2 = distance - speedcontrol2_distance ; // Calculate error
+
+  // Compute PID terms
+  double proportional2 = Kp2 * error2;
+  integral += error2*dt;
+  double derivative2 = (error2 - previousError2)/dt;
+
+  //can we overide the output on the first time the reference speed is updated to reduce the error
+
+  double output = proportional2 + Ki2 * integral2 + Kd2 * derivative2;
+
+  // Apply control output to adjust motor speeds
+  // For simplicity, assume left and right speeds are adjusted simultaneously
+  leftspeed += output;
+  rightspeed += output;
+
+  // Ensure motor speeds are within valid range
+  leftspeed = constrain(leftspeed, 0, 255);
+  rightspeed = constrain(rightspeed, 0, 255);
+
+  // Update previous error for derivative term calculation
+  previousError2 = error2;
+
+  //coms for control loop 2 updates to GUI
+  if (speedControl2_pressed && loopCount % 200 == 0) {
+      client.write("current distance is ");
+      client.write(String(objectDistance).c_str());
+    }
+
+}
+
