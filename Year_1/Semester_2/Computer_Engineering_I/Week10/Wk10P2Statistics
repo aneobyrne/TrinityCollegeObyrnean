@@ -1,0 +1,94 @@
+#include <cmath>
+#include <iostream>
+#include <iomanip>
+using namespace std;
+
+//equation functions
+void read_to_sentinel(double array[], int capacity, int& size, double sentinel);
+double Mean (int size, double numbers[]);
+double Variance (double numbers[], int size);
+double Stdeva (double numbers[], int size);
+double num_zerocrossings(double numbers[], int size);
+
+
+int main()
+{
+	const int CAPACITY = 100;
+	double array[CAPACITY];
+	int size;
+	double sentinel = 9999;
+
+  //check if overflow
+  read_to_sentinel (array, CAPACITY, size, sentinel);
+
+  //call in functions for stats
+  double ave = Mean(size, array);
+  double var = Variance(array, size);
+  double stddev = Stdeva(array, size);
+  double zeros = num_zerocrossings(array, size);
+  
+  //Print the output
+  cout << "Count:" << size << endl;
+	cout << "Mean:" << ave << endl;
+	cout << "Variance:" << var << endl;
+	cout << "Std. Dev.:" << stddev << endl;
+  cout << "Zero Xs:" << zeros << endl;
+
+  return 0;
+}
+
+//check if there's an overflow, if there is only take 100 inputs
+void read_to_sentinel (double array[], int capacity, int& size, double sentinel)
+{
+	size = 0;
+	double x;
+	cin >> x;
+	while(size < capacity && x != sentinel)
+	{
+		array[size] = x;
+		size = size+1;
+		cin >> x;
+	}
+  if (size == capacity)
+    cout << "\nWARNING OVERFLOW Only first " << capacity << " numbers handled.\n";
+}
+
+//calculate the mean of the values
+double Mean (int size, double numbers[]) {
+  double sum = 0;
+  int counter = 0;
+  for (int i = 0; i < size; i++) {
+    sum += numbers[i]; 
+    counter ++;
+  }
+  return sum/counter;
+}
+
+//calculate variance of the values
+double Variance (double numbers[], int size) {
+  int counter = 0; 
+  double mean = Mean(size, numbers);
+  double total = 0; 
+  for (int i = 0; i < size; i++) {
+    total += pow(numbers[i] - mean,2);
+    counter ++;
+  }
+  return (total/(counter -1));
+}
+
+//standard deviation of inputs
+double Stdeva (double numbers[], int size) {
+  double variance = Variance(numbers, size);
+  return sqrt(variance);
+}
+
+//how many zeros between the values counter
+double num_zerocrossings(double numbers[], int size) {
+  int counter = 0;
+   for (int i = 1; i < size; i++) {
+     if ((numbers[i])*(numbers[i-1]) < 0)
+       counter ++;
+   }
+
+  return counter;
+}
