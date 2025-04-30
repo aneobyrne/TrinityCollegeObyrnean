@@ -1,0 +1,48 @@
+//5 points of 20 for this week
+//Indicate which pizza is better value
+//Complete this program so that the if statement provided will print "FIRST", "SECOND or "SAME" as appropriate.
+//Reuse your previous ppsi code
+#include <iostream>
+using namespace std;
+
+int main() {
+  const double PI = 3.1415;
+        double diameter1;
+        double ppsi1;
+        double price1;
+  
+  cout << "Enter the diameter and price of the first pizza:";
+  cin >> diameter1;
+  cin >> price1;
+
+  double radius1 = diameter1 / 2.0;
+  double area1 = PI * (radius1*radius1);
+  
+  ppsi1 = price1 / area1;
+  
+  double diameter2;
+  double ppsi2;
+  double price2;
+  
+  cout << "Enter the diameter and price of the second pizza:";
+  cin >> diameter2;
+  cin >> price2;
+
+  double radius2 = diameter2 / 2.0;
+  double area2 = PI * (radius2*radius2);
+
+  ppsi2 = price2 / area2;
+
+  if (ppsi1 < ppsi2) {
+    cout << "FIRST";
+  }
+  else if (ppsi1 > ppsi2) {
+    cout << "SECOND";
+  } else {
+    cout << "SAME";
+  }
+  
+  cout << endl;
+  
+  return 0;
+}
