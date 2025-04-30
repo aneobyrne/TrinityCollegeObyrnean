@@ -1,0 +1,108 @@
+//URL: https://replit.com/@1E32023/Mid-semester-test-obyrnean#main.cpp
+#include <iostream>
+#include <cmath>
+#include <iomanip>
+#include <string>
+using namespace std;
+//string category (double speed);
+int main() {
+ const string SENTINEL = "XXX";
+ int num_years, n;
+ double speed, max_speed;
+ string storm_name, year, max_storm, category; 
+ bool isstorm; 
+ //read in first years
+ cin >> num_years; 
+ //outer loop for each year
+ for (n = 0; n < num_years; n++) {
+ 
+cin >> year; 
+ 
+max_speed = 0; 
+ 
+isstorm = false; 
+ 
+cin >> storm_name;
+ 
+cout << year << endl; 
+ 
+//inner loop
+ 
+while (storm_name != "XXX") {
+ 
+cin >> speed;
+ 
+//has to be category 3 or higher meaning over 178
+ 
+if (speed >= 178) {
+ 
+//compute categories
+ 
+if (speed >= 250) {
+ 
+category = "5";
+ 
+}
+ 
+else if (speed >= 210) {
+ 
+category = "4";
+ 
+}
+ 
+else
+ 
+category = "3";
+ 
+ 
+cout << storm_name << " Category " << category << endl;
+ 
+isstorm = true;
+ 
+}
+ 
+//CHeck if strongest storm
+ 
+if (speed > max_speed) {
+ 
+max_speed = speed;
+ 
+max_storm = storm_name; 
+ 
+cin >> storm_name;
+ 
+}
+ 
+}
+ 
+//declare strongest storm if there is
+ 
+cout << "Strongest storm: "; 
+ 
+if (!isstorm) {
+ 
+cout << "NONE" << endl; 
+ 
+}
+ 
+else 
+ 
+cout << max_storm << endl; 
+ 
+cout << "------------------\n";
+ } 
+ 
+ return 0;
+}
+//i coulnd't work out the function: please ignore
+// string category (double speed) {
+// if (speed >= 250) {
+// 
+category = "5";
+// }
+// else if (speed >= 210) {
+// category = "4";
+// }
+// else 
+// category = "3"
+// return category;
