@@ -1,0 +1,239 @@
+#include "WiFiS3.h"
+
+//MOTOR DECLARATIONS:
+const int M1 = 6;                  // Left motor control pin 1 (direction(~))
+const int M2 = 7;                  // Left motor control pin 2 (direction)
+const int M3 = 8;                  // Right motor control pin 1 (direction)
+const int M4 = 9;                  // Right motor control pin 2 (direction(~))
+const int ENABLE_LEFT_PIN = 10;    // Enable pin for left motor (speed(~))
+const int ENABLE_RIGHT_PIN = 11;   // Enable pin for right motor (speed(~))
+
+//IR SENSORS:
+const int LEYE = A3;               // Left sensor pin
+const int REYE = A4;               // Right sensor pin
+
+//ULTRASONICS: 
+const int US_TRIG = 4; //sends out pulse
+const int US_ECHO = 2;  //receives pulse
+
+//WiFi DECLARATIONS: 
+WiFiServer server(80); // created a wifi server on port 80, this number will be needed for processing to connect to it.
+WiFiClient client; // Creating Client (Processing in our case)
+
+//VARIABLES
+bool isGoPressed = false;// Check if go/stop button has been pressed allowing to execute following line 
+int loopCount = 0; // Counter of how many times void loop is ran 
+int distance; // Distance of object infront
+long duration; // Time for pulse to return
+String stringDistance; // Stores distance as string for coms
+
+//WHEEL ENCODERS
+const int Left_Encoder = A2;
+const int Right_Encoder = A1;
+volatile int Encoder_Count_Left = 0; // volatile alerts the compiler this will change by the isr 
+volatile int Encoder_Count_Right = 0;
+double Distance_Travelled = 0;
+String D_travelled;
+// wheel diameter measured at 63.5mm 
+double circumference = 2*PI*(0.0635/2); // circumference in m 
+
+void setup() {
+  Serial.begin(9600);
+// declaring pins as inputs or outputs accordingly
+  pinMode(LEYE, INPUT);
+  pinMode(REYE, INPUT);
+  pinMode(M1, OUTPUT);
+  pinMode(M2, OUTPUT);
+  pinMode(M3, OUTPUT);
+  pinMode(M4, OUTPUT);
+  pinMode(ENABLE_LEFT_PIN, OUTPUT);
+  pinMode(ENABLE_RIGHT_PIN, OUTPUT);
+  pinMode(US_TRIG, OUTPUT);
+  pinMode(US_ECHO, INPUT);
+  pinMode(Left_Encoder, INPUT);
+  pinMode(Right_Encoder, INPUT_PULLUP);
+
+  //encoder ISR to detect a change
+  attachInterrupt(digitalPinToInterrupt(Left_Encoder), LeftEncoderISR, CHANGE); // engages our Function when there is a change from high to low
+  attachInterrupt(digitalPinToInterrupt(Right_Encoder), RightEncoderISR, CHANGE);
+
+  //WIFI! Following two lines must be changed accordingly
+  char ssid[] = "iPhone (4)"; 
+  char pass[] = "MRK@1ph0n3!";
+
+  WiFi.begin(ssid, pass); //Attempt to make a connection with these credentials
+
+  while (WiFi.status() != WL_CONNECTED) { //Check if connection is not established
+    delay(500);
+    Serial.print(".");
+  }
+  // If there's a connection:
+  Serial.println();
+  Serial.print("Connected to WiFi. IP address: "); //Print IP to serial port, this will change depending on the netowrk and must be copied into our processing code
+  Serial.println(WiFi.localIP());
+  server.begin(); // Begin the server 
+}
+
+//FUNCTIONS
+void LeftEncoderISR() { // ISR for left encoder
+  Encoder_Count_Left++;
+}
+
+void RightEncoderISR() { // ISR for left encoder
+  Encoder_Count_Right++;
+}
+// we should measure both wheels and find the average to account for differences on turning radius
+
+void startMotors() { //Funtion that alerts GO button has been pressed on Processing
+  Serial.println("Go button pressed");
+  isGoPressed = true; // updating the boolean to control the main if block in our code below
+}
+
+void stopMotors() { //Funtion that alerts STOP button has been pressed on Processing
+  Serial.println("Stop button pressed");
+  isGoPressed = false; // updated boolean
+  // Stop motors set all logic and enable pins low to ensure no movement
+  digitalWrite(M1, LOW);
+  digitalWrite(M2, LOW);
+  digitalWrite(M3, LOW);
+  digitalWrite(M4, LOW);
+  analogWrite(ENABLE_LEFT_PIN, 0);
+  analogWrite(ENABLE_RIGHT_PIN, 0);
+  // using the boolean means the buggy will wait until go is pressed no matter how many loops we itterate over
+}
+
+void loop() {
+  // Handle client connection
+  if (!client || !client.connected()) { //If client is not initilized OR connected:
+    client = server.available(); //Tries to accpet new client connection
+    if (client) { //If new client availbable: 
+      Serial.println("Client connected");
+    }
+  }
+
+  if (client && client.connected()) { // ensures client is itialized, not null and is connected
+    while (client.available()) { // While data is available
+      char c = client.read(); // Read each character of the data 
+      // check if is go or stop and call appropriate functions
+      if (c == 'g') { 
+        startMotors();
+      } else if (c == 's') {
+        stopMotors();
+      }
+    }
+  } else { // alerts us if client is not conenected otherwise 
+    Serial.println("Client disconnected");
+    if (client) {
+      client.stop(); //Closes connection
+    }
+  }
+
+
+ // Steering logic and US sensing
+  if (isGoPressed) { // if go is pressed, proceed with line following and object detection code
+    
+    //Ultrasonic test for object presence
+    if (loopCount % 20 == 0) { //Checks every 20 iterations
+      digitalWrite(US_TRIG, LOW);
+      delayMicroseconds(2);
+      //Send high signal from trigger pin
+      digitalWrite(US_TRIG, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(US_TRIG, LOW);
+      
+      duration = pulseIn(US_ECHO, HIGH); // gets the duration of the pulse in microseconds
+      distance = duration / 60; // calculates the distance, Sound travels at 343 meters per second, which means it needs 29.155 microseconds per centimeter, the object must travel twice the distance to return.
+
+      if (distance <= 15) {  //stop motors if an object is detected 15cm away
+        // Stop all motors
+        digitalWrite(M1, LOW);
+        digitalWrite(M2, LOW);
+        digitalWrite(M3, LOW);
+        digitalWrite(M4, LOW);
+        analogWrite(ENABLE_LEFT_PIN, 0);
+        analogWrite(ENABLE_RIGHT_PIN, 0);
+
+        //Serial.println("Object detected within 15 cm! Stopping motors."); // this is just for debug
+
+        //send the data to processing to wirelessly display in the serial monitor
+         stringDistance = String(distance);// converts to a string
+         client.write("Object detected ");
+         // we need to convert the data to a string and a c style string so that it can be sent by client.write and read by .readstring()
+         client.write(stringDistance.c_str());
+         client.write(" cm away\n");
+
+        // Wait until object is moved before continuing the loop
+        while (distance <= 15) {
+          //check constantly for distance until it is greater than the minimum 
+          digitalWrite(US_TRIG, LOW);
+          delayMicroseconds(2);
+          digitalWrite(US_TRIG, HIGH);
+          delayMicroseconds(10);
+          digitalWrite(US_TRIG, LOW);
+
+          duration = pulseIn(US_ECHO, HIGH);
+          distance = duration / 60;
+        
+        }
+        //Object moved! Resuming motors
+      }
+    }
+
+    // Serial.println(loopCount); // Uncomment for loop count debug
+    loopCount++;
+
+    //line following logic
+    // remember Remember when programming the IR sensors they are Active Low Output: "Active Low" means that the sensor's output signal goes low (or near 0V) when it detects an obstacle. 
+ 
+    int leftSensor = digitalRead(LEYE); // reads each sensor
+    int rightSensor = digitalRead(REYE);
+
+    if (leftSensor == HIGH && rightSensor == HIGH) {
+      // Both sensors detect darkness - move forward at reduced speed
+      digitalWrite(M1, HIGH);
+      digitalWrite(M2, LOW);
+      digitalWrite(M3, HIGH);
+      digitalWrite(M4, LOW);
+      analogWrite(ENABLE_LEFT_PIN, 110);  // Adjust speed here
+      analogWrite(ENABLE_RIGHT_PIN, 110); // Adjust speed here
+    } else if (leftSensor == LOW && rightSensor == HIGH) {
+      // left sensor detects line - turn left at slower speed
+      digitalWrite(M1, HIGH);
+      digitalWrite(M2, LOW);
+      digitalWrite(M3, HIGH);
+      digitalWrite(M4, LOW);
+      analogWrite(ENABLE_LEFT_PIN, 33;   // Adjust speed here
+      analogWrite(ENABLE_RIGHT_PIN, 110); // Adjust speed here
+    } else if (leftSensor == HIGH && rightSensor == LOW) {
+      // right sensor line - turn right at slower speed
+      digitalWrite(M1, HIGH);
+      digitalWrite(M2, LOW);
+      digitalWrite(M3, HIGH);
+      digitalWrite(M4, LOW);
+      analogWrite(ENABLE_LEFT_PIN, 110);  // Adjust speed here
+      analogWrite(ENABLE_RIGHT_PIN, 33);  // Adjust speed here
+    } else {
+      // Both sensors detect white line) - move forward at reduced speed
+      digitalWrite(M1, HIGH);
+      digitalWrite(M2, LOW);
+      digitalWrite(M3, HIGH);
+      digitalWrite(M4, LOW);
+      analogWrite(ENABLE_LEFT_PIN, 10);    // Adjust speed here
+      analogWrite(ENABLE_RIGHT_PIN, 10);   // Adjust speed here
+    }
+    // update distance_travelled
+    Distance_Travelled = ((Encoder_Count_Left+Encoder_Count_Right)/16.0)*circumference; // here it should be 16 on the denominator as we are considering both wheels but while c
+    
+    //Serial.println(" Distance Travelled is...");
+    //Serial.println(Distance_Travelled);
+    if (loopCount % 350 == 0) { //350 interations
+      D_travelled = String(Distance_Travelled);
+      client.write("distance travelled is ");
+      client.write(D_travelled.c_str());
+      client.write(" m.\n");
+    }
+    
+  }
+
+//delay(2000); // Adjust delay as needed for sensor response
+}
