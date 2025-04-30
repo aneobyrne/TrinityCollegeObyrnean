@@ -1,0 +1,48 @@
+#include <iostream>
+#include <cmath>
+#include <iomanip>
+using namespace std;
+
+double newton_sqrt (double n, double init);
+double better_approx (double x, double n);
+bool close_enough (double x, double n);
+
+int main () {
+    double n;
+    double approx;
+    cout << "Enter n:";
+    cin >> n;
+    approx = newton_sqrt (n, n/2); //call newton's square root equation
+    cout << fixed << setprecision(6);
+    cout << "The square root of " << n;
+    cout << " is approx " << approx << endl;
+    
+    return 0;
+}
+
+//newton's square root formula
+double newton_sqrt(double n, double init) {
+   double approx = init;
+   double new_approx = better_approx(approx, n);
+
+   while (close_enough(new_approx, n) != true) {
+     approx = better_approx(new_approx, n);
+     new_approx = approx; }
+    return approx;
+}
+
+//get a better approximation to the quare root of n
+double better_approx (double x, double n) {
+    double new_approx = ((n/x) + x)/2.0;
+   cout << fixed << setprecision(6) << new_approx << endl;
+    return new_approx;
+  }
+
+//determine if x is close to the square root of n
+bool close_enough (double x, double n) {
+ // double absolute= abs(n - (x*x));
+  if (((x*x) - n) <= 0.0001)
+    return true;
+  else
+    return false;
+  } 
