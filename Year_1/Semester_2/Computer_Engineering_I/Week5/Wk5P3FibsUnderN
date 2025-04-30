@@ -1,0 +1,31 @@
+/* 
+Fibonnacis up to an entered number.
+To avoid printing the term after the limit, you need set up your loop so that
+you check next *before* printing it. 
+*/
+#include <iostream>
+using namespace std;
+
+int main() {
+  int limit, next = 0;
+  int prev = 0, curr = 1;
+  cout << "Fibs below what:";
+  cin >> limit;
+  cout << prev << " " << curr << " ";
+  
+  int count = 2;
+   while (next < limit)
+      { 
+        next = prev + curr;
+        prev = curr;
+        curr = next;
+        if (next < limit) //just to print numbers below the limit
+        {
+          cout << next << " ";
+          count++;
+        }
+      }
+
+	cout << "\nThat was " << count << " terms.\n";       
+  return 0;
+}
