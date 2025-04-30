@@ -1,0 +1,134 @@
+#include <iostream>
+#include <vector>
+#include <string> 
+
+using namespace std;
+
+void inputData (string &name, string &maxName, string &minName);
+
+bool checkIfInt (string score);
+
+bool checkIfDouble (string score);
+
+void MaxMinCalc (string name, int &score, int &total, int &maxScore, int &minScore, string &maxName, string &minName);
+
+void outputData (string minName, string maxName, int minScore, int maxScore, int total);
+
+void outputNoData ();
+
+
+int main() {
+  int maxScore = 0, minScore = 2147483647, counter = 0, player_score = 0; 
+  string nametoFilter, minScoreName, player_name, maxScoreName, Score;
+
+  cout << "Enter name to filter. Enter \"all\" to process all records:";
+  cin >> nametoFilter;
+
+  if (nametoFilter == "all") {
+    
+    inputData (player_name, maxScoreName, minScoreName);
+  
+  while (player_name != "done") { 
+    cin >> Score;
+
+    if (!checkIfDouble (Score) && checkIfInt(Score))
+       player_score = stoi(Score);
+     else 
+      player_score = 0; 
+
+
+    MaxMinCalc (player_name, player_score, counter, maxScore, minScore, maxScoreName, minScoreName);
+    
+       cin >> player_name;
+     } 
+
+    if (maxScore == 0 || minScore == 0)
+      outputNoData();
+
+    else
+    outputData(minScoreName, maxScoreName, minScore, maxScore, counter); 
+  }
+    
+  else {
+  inputData (player_name, maxScoreName, minScoreName);
+
+   while (player_name != "done") {
+     while (player_name == nametoFilter) {
+     cin >> Score;
+
+    if (!checkIfDouble (Score) && checkIfInt(Score))
+       player_score = stoi(Score);
+     else 
+      player_score = 0; 
+
+     
+    MaxMinCalc (player_name, player_score, counter, maxScore, minScore, maxScoreName, minScoreName);
+       
+      cin >> player_name;
+     }
+    cin >> player_name;
+   }
+    if (maxScoreName == nametoFilter || minScoreName == nametoFilter)
+    outputData(minScoreName, maxScoreName, minScore, maxScore, counter);
+  
+   else 
+      outputNoData();
+    
+   }
+  
+  return 0;
+}
+
+void inputData (string &name, string &maxName, string &minName) {
+  cout << endl << "Enter data:";
+  cin >> name;
+    maxName = name, minName = name;
+}
+
+bool checkIfInt (string score) {
+  for (int i = 0; i < score.size(); i++ ) {
+    if (isdigit(score[i]) == false)
+      return false;
+    else 
+      return true;
+  }
+}
+
+bool checkIfDouble (string score) {
+  int num = 0;
+  for (int i = 0; i < score.size(); i++) {
+   if (score[i] == '.') 
+     num++; }
+  if (num > 0)
+    return true;
+  else 
+    return false;
+}
+
+void MaxMinCalc (string name, int &score, int &total, int &maxScore, int &minScore, string &maxName, string &minName) {
+ if (score > 0) {
+        total += score;
+        if (score > maxScore) {
+          maxScore = score;
+          maxName = name;
+        }
+        if (score < minScore) {
+          minScore = score;
+          minName = name;
+      }
+    }
+}
+
+void outputData (string minName, string maxName, int minScore, int maxScore, int total) {
+    cout << endl << "-------" << endl << "Results" << endl << "-------" << endl;
+    cout << "Minimum: " << minName << " " << minScore << endl;
+    cout << "Maximum: " << maxName << " " << maxScore << endl;
+    cout << "Total: " << total;
+} 
+
+void outputNoData () {
+  cout << endl << "-------" << endl << "Results" << endl << "-------" << endl;
+    cout << "Minimum: " << "(no data found)" << endl;
+    cout << "Maximum: " << "(no data found)"<< endl;
+    cout << "Total: " << "(no data found)";
+}
