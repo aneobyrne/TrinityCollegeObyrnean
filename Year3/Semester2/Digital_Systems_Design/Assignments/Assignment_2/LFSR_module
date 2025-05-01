@@ -1,0 +1,67 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: Trinity College Dublin
+// Engineer: Ane O'Byrne
+// Create Date: 11.03.2025 18:33:56
+// Design Name: Assignment 2
+// Module Name: LFSR_module
+// Project Name: LFSR Module
+// Target Devices: Basys-3
+// Revision 0.01 - File Created
+// 
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module LFSR_module(
+    input wire clk,             // Clock signal
+    input wire reset,           // Active-high asynchronous reset
+    output reg [22:0] lfsr_out, // 23-bit LFSR output 
+    output reg max_tick_reg     // 1-bit registered output (goes high after 2^N - 1 cycles)
+);
+
+  // Local parameters for seed value (XOR of 23 and 54 = 33)
+    localparam [22:0] seed = 23'b00000000000000000100001; // Seed after XOR of 23 (23d) and 54 (54d)
+    
+   // Internal register to hold the current state of the LFSR
+    reg [22:0] lfsr_reg = seed;
+    
+    // XOR feedback calculation based on taps (3, 12, 14, 15)
+    wire feedback;
+    assign feedback = lfsr_reg[22] ^ lfsr_reg[17];
+
+    // Asynchronous reset and LFSR state update on each clock cycle
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            // On reset, load the seed value and set max_tick_reg to 0
+            lfsr_reg <= seed;
+            max_tick_reg <= 0;
+        end else begin
+            // Shift the LFSR register left and insert the feedback bit in LSB
+            lfsr_reg <= {lfsr_reg[21:0], feedback};
+        end
+    end
+    
+    // Output the current LFSR state
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            lfsr_out <= seed; // Reset to seed value on reset
+        end else begin
+            lfsr_out <= lfsr_reg; // Update output with the current LFSR state
+        end
+    end
+
+    // Generate max_tick_reg when the LFSR reaches the seed value again (2^N - 1 cycles)
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            max_tick_reg <= 0;
+        end else if (lfsr_reg == seed) begin
+            // When the LFSR reaches the seed value, set max_tick_reg high for 1 clock cycle
+            max_tick_reg <= 1;
+        end else begin
+            max_tick_reg <= 0;
+        end
+    end
+
+endmodule
