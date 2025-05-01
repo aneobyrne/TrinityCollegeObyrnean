@@ -1,0 +1,35 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// College: Trinity College Dublin
+// Engineer: Ane O'Byrne
+// Create Date: 18.02.2025 17:17:57
+// Design Name: Ripple Adder Module
+// Module Name: ripple_adder_module
+// Project Name: Assignment1
+// Target Devices: Basys3
+// Description: 6-bit ripple adder module for arithmetic operations A+B and A-B
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module ripple_adder_module(
+    input [5:0] x, y,
+    input sel,
+    output overflow, c_out,
+    output [5:0]sum
+    );
+    wire [5:0] y_modified;
+    wire c0,c1,c2,c3,c4,c5;
+    
+     // If sel is 1, flip the bits of y, otherwise pass y as is
+    assign y_modified = sel ? ~y : y;
+
+    FullAdder bit0 (.a(x[0]), .b(y_modified[0]), .cin(sel), .s(sum[0]), .cout(c0));
+    FullAdder bit1 (.a(x[1]), .b(y_modified[1]), .cin(c0), .s(sum[1]), .cout(c1));
+    FullAdder bit2 (.a(x[2]), .b(y_modified[2]), .cin(c1), .s(sum[2]), .cout(c2));
+    FullAdder bit3 (.a(x[3]), .b(y_modified[3]), .cin(c2), .s(sum[3]), .cout(c3));
+    FullAdder bit4 (.a(x[4]), .b(y_modified[4]), .cin(c3), .s(sum[4]), .cout(c4));
+    FullAdder bit5 (.a(x[5]), .b(y_modified[5]), .cin(c4), .s(sum[5]), .cout(c5));
+    
+    assign overflow = ((!c4 && c5) || (c4 && !c5))? 1'b1: 1'b0;
+    assign c_out = c5;
+endmodule
