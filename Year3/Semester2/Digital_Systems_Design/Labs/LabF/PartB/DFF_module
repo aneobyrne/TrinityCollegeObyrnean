@@ -3,67 +3,87 @@
 module DFF_module(
     input wire clk,                 // Clock input
     input wire reset,               // Reset input
-    input wire [4:0] push_buttons,  // 5-bit vector for push button inputs
-    output wire [3:0] anode_select, // 4-bit anode selection for 7-segment display
-    output wire [6:0] seven_seg_out // 7-bit LED output for 7-segment display
-    );
-    
+    input wire [4:0] button_input,  // 5-bit vector for push button inputs
+    output wire [3:0] anode_sel,    // 4-bit anode selection for 7-segment display
+    output wire [6:0] led_out       // 7-bit LED output for 7-segment display
+);
+
     // Wires for connecting internal signals
     wire [4:0] debounced_buttons;  // Debounced push buttons output
-    wire dff_output;               // D flip-flop output for the button press logic
+    wire [7:0] Q;                  // 8-bit wire vector for temperature value from DFFs
 
     // Instantiate the debouncer module
     debouncer db0 (
         .clk(clk), 
         .reset(reset), 
-        .pb(push_buttons[0]), 
-        .debounced_out(debounced_buttons[0])
-    );
-    
-    debouncer db1 (
-        .clk(clk), 
-        .reset(reset), 
-        .pb(push_buttons[1]), 
-        .debounced_out(debounced_buttons[1])
-    );
-    
-    debouncer db2 (
-        .clk(clk), 
-        .reset(reset), 
-        .pb(push_buttons[2]), 
-        .debounced_out(debounced_buttons[2])
-    );
-    
-    debouncer db3 (
-        .clk(clk), 
-        .reset(reset), 
-        .pb(push_buttons[3]), 
-        .debounced_out(debounced_buttons[3])
-    );
-    
-    debouncer db4 (
-        .clk(clk), 
-        .reset(reset), 
-        .pb(push_buttons[4]), 
-        .debounced_out(debounced_buttons[4])
+        .button_in(button_input), 
+        .button_out(debounced_buttons)
     );
 
-    // Instantiate the D flip-flop module
-    d_type_ff dff (
+    // Instantiate 8 D flip-flops (DFF0 to DFF7)
+    d_ff_reset DFF0 (
         .clk(clk),
         .reset(reset),
-        .d(debounced_buttons[0]), // Example of using one debounced button input
-        .q(dff_output)
+        .d(debounced_buttons[0]), // First button input
+        .q(Q[0])                   // Store bit 0 of the temperature value
+    );
+
+    d_ff_reset DFF1 (
+        .clk(clk),
+        .reset(reset),
+        .d(debounced_buttons[1]), // Second button input
+        .q(Q[1])                   // Store bit 1 of the temperature value
+    );
+
+    d_ff_reset DFF2 (
+        .clk(clk),
+        .reset(reset),
+        .d(debounced_buttons[2]), // Third button input
+        .q(Q[2])                   // Store bit 2 of the temperature value
+    );
+
+    d_ff_reset DFF3 (
+        .clk(clk),
+        .reset(reset),
+        .d(debounced_buttons[3]), // Fourth button input
+        .q(Q[3])                   // Store bit 3 of the temperature value
+    );
+
+    d_ff_reset DFF4 (
+        .clk(clk),
+        .reset(reset),
+        .d(debounced_buttons[4]), // Fifth button input
+        .q(Q[4])                   // Store bit 4 of the temperature value
+    );
+
+    d_ff_reset DFF5 (
+        .clk(clk),
+        .reset(reset),
+        .d(debounced_buttons[0]), // Reuse button input if necessary
+        .q(Q[5])                   // Store bit 5 of the temperature value
+    );
+
+    d_ff_reset DFF6 (
+        .clk(clk),
+        .reset(reset),
+        .d(debounced_buttons[1]), // Reuse button input if necessary
+        .q(Q[6])                   // Store bit 6 of the temperature value
+    );
+
+    d_ff_reset DFF7 (
+        .clk(clk),
+        .reset(reset),
+        .d(debounced_buttons[2]), // Reuse button input if necessary
+        .q(Q[7])                   // Store bit 7 of the temperature value
     );
 
     // Instantiate the 7-segment display controller
-    sevenseg seg (
+    seven_segment_controller seg (
         .clk(clk),
         .reset(reset),
-        .d(dff_output),  // Using the D flip-flop output for display
-        .seven_seg(seven_seg_out),
-        .anode(anode_select)
+        .temp(Q),           // Pass the 8-bit temperature value to the seven-segment controller
+        .anode_select(anode_sel),  // 7-segment anode selection
+        .LED_out(led_out)        // 7-segment LED output
     );
 
-    
 endmodule
