@@ -1,0 +1,33 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// College: Trinity College Dublin
+// Engineer: Ane O'Byrne
+// Create Date: 18.02.2025 17:17:57
+// Design Name: Multiplexer
+// Module Name: multiplexer
+// Project Name: Assignment1
+// Target Devices: Basys3
+// Description: Choose which of the ALU operations to output based on the 3-bit control signal fxn
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module multiplexer(
+    input [5:0] A, B, negation_A, negation_B, A_less_than_B, xnor_out, add_out, sub_out, 
+    input [2:0] fxn, 
+    output reg [5:0] out
+    );
+    
+    always @(*) begin
+        case (fxn)
+            3'b000: out = A;              // fxn 000 -> output A
+            3'b001: out = B;              // fxn 001 -> output B
+            3'b010: out = negation_A;     // fxn 010 -> output -A
+            3'b011: out = negation_B;     // fxn 011 -> output -B
+            3'b100: out = A_less_than_B;  // fxn 100 -> output A < B
+            3'b101: out = xnor_out;       // fxn 101 -> output A XNOR B
+            3'b110: out = add_out;        // fxn 110 -> output A + B 
+            3'b111: out = sub_out;        // fxn 111 -> output A - B 
+            default: out = 6'b000000;     // Default (no match)
+        endcase
+    end
+endmodule
