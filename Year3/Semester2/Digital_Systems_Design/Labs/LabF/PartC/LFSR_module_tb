@@ -1,0 +1,53 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: Trinity College Dublin
+// Engineer: Ane O'Byrne
+// Create Date: 11.03.2025a 18:33:56
+// Testbench Name: LFSR_module_tb
+// Project Name: LFSR Module Testbench
+// Target Devices: Basys-3
+//////////////////////////////////////////////////////////////////////////////////
+
+module LFSR_module_tb;
+    // Testbench signals
+    reg clk;                // Clock signal
+    reg reset;              // Active-high reset signal
+    wire [15:0] lfsr_out;   // LFSR output wire
+    wire max_tick_reg;      // Output for max tick signal
+    
+    // Instantiate the LFSR module
+    LFSR_module uut (
+        .clk(clk), 
+        .reset(reset), 
+        .lfsr_out(lfsr_out), 
+        .max_tick_reg(max_tick_reg)
+    );
+
+    // Generate clock with a period of 10 ns (100 MHz)
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk; // Toggle clock every 5 ns
+    end
+
+    // Test the reset and LFSR operation
+    initial begin
+        // Initialize signals
+        #0 reset = 1;           // Start with reset high
+        
+        // Wait for the reset to be applied for 10 clock cycles
+        #100 reset = 0;  // 10 clock cycles (each clock cycle is 10 ns, so 10 * 10ns = 100ns)
+       
+        
+        // Run the simulation for the full LFSR period (65535 clock cycles)
+        // This is 65535 * 10 ns = 655350 ns = 655.35 us
+         #655450; // 655.35 microseconds
+         $stop; 
+         
+    end
+
+    // Monitor outputs (first 100 cycles limited)
+    initial begin
+        $monitor("Time: %t, reset: %b, LFSR Output: %b, max_tick_reg: %b", $realtime, reset, lfsr_out, max_tick_reg);
+    end
+
+endmodule
