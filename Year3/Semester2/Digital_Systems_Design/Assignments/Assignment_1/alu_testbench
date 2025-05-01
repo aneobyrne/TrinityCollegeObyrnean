@@ -1,0 +1,95 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// College: Trinity College Dublin
+// Engineer: Ane O'Byrne
+// Create Date: 18.02.2025 17:17:57
+// Design Name: Top Level ALU Testbench
+// Module Name: alu_testbench
+// Project Name: Assignment1
+// Target Devices: Basys3
+// Description: Apply test input values to  ALU and verify that it behaves correctly
+//////////////////////////////////////////////////////////////////////////////////
+
+
+
+module alu_testbench;
+    reg [5:0] A, B;
+    reg [2:0] fxn;
+    wire [5:0] out;
+
+    // Instantiate ALU module
+    top_lvl_alu_module uut (  // Unit Under Test to interact with ALU module
+                            .A(A), 
+                            .B(B), 
+                            .fxn(fxn), 
+                            .out(out)
+                            );
+
+    // Test cases:
+    initial begin
+        $monitor("A = %b  B = %b fxn = %b  -> Output(X) = %b", A, B, fxn, out);
+
+        // A test Vector needs to be my board number = 23
+        // Test: fxn = 000 -> Output A (A = 23, B = 1, X = 23)
+        A = 6'b010111; B = 6'b000001; fxn = 3'b000; #10;
+        
+        // Test: fxn = 001 -> Output B (A = 23, B = 1, X = 1)
+        A = 6'b010111; B = 6'b000001; fxn = 3'b001; #10;
+        
+        // Test: fxn = 010 -> Output -A (A = 23, B = 1, X = -23)
+        A = 6'b010111; B = 6'b000001; fxn = 3'b010; #10;
+        
+        // Test: fxn = 010 -> Output -A (A = 0, B = 1, X = 0)
+        A = 6'b000000; B = 6'b000001; fxn = 3'b010; #10;
+
+        // Test: fxn = 011 -> Output -B (A = 23, B = 1, X = -1)
+        A = 6'b010111; B = 6'b000001; fxn = 3'b011; #10;
+
+        // Test: fxn = 100 -> Output A < B (A = 23, B = 1, X = 0)
+        A = 6'b010111; B = 6'b000001; fxn = 3'b100; #10;
+        
+        // Test: fxn = 100 -> Output A < B (A = 23, B = 24, X = 1)
+        A = 6'b010111; B = 6'b011000; fxn = 3'b100; #10;
+        
+        // Test: fxn = 100 -> Output A < B (A = 23, B = 23, X = 0)
+        A = 6'b010111; B = 6'b010111; fxn = 3'b100; #10;
+
+        // Test: fxn = 101 -> Output A XNOR B (A = 23, B = 1, X = 44)
+        A = 6'b010111; B = 6'b000001; fxn = 3'b101; #10;
+
+        // Test: fxn = 110 -> Output A + B (A = 23, B = 1, X = 24)
+        A = 6'b010111; B = 6'b000001; fxn = 3'b110; #10;
+        
+        // Test: fxn = 110 -> Output A + B (A = -23, B = 1, X = -22)
+        A = 6'b101001; B = 6'b000001; fxn = 3'b110; #10;
+        
+        // Test: fxn = 110 -> Output A + B (A = 23, B = -1, X = 22 -> Overflow!)
+        A = 6'b010111; B = 6'b111111; fxn = 3'b110; #10;
+        
+        // Test: fxn = 110 -> Output A + B (A = 32, B = 32, X = 64 -> 0 Overflow!)
+        A = 6'b100000; B = 6'b100000; fxn = 3'b110; #10;
+        
+        // Test: fxn = 110 -> Output A + B (A = 0, B = 0, X = 0)
+        A = 6'b000000; B = 6'b000000; fxn = 3'b110; #10;
+
+        // Test: fxn = 111 -> Output A - B (A = 23, B = 1, X = 22)
+        A = 6'b010111; B = 6'b000001; fxn = 3'b111; #10;
+        
+        // Test: fxn = 111 -> Output A - B (A = 23, B = 24, X = -1)
+        A = 6'b010111; B = 6'b011000; fxn = 3'b111; #10;
+        
+        // Test: fxn = 111 -> Output A - B (A = 23, B = 23, X = 0)
+        A = 6'b010111; B = 6'b010111; fxn = 3'b111; #10;
+        
+        // Test: fxn = 111 -> Output A - B (A = 23, B = -1, X = 24)
+        A = 6'b010111; B = 6'b111111; fxn = 3'b111; #10;
+        
+        // Test: fxn = 111 -> Output A - B (A = -23, B = -1, X = -22)
+        A = 6'b101001; B = 6'b111111; fxn = 3'b111; #10;
+        
+        // Test: fxn = 111 -> Output A - B (A = 0, B = 0, X = 0)
+        A = 6'b000000; B = 6'b000000; fxn = 3'b111; #10;
+
+        $finish;
+    end
+endmodule
