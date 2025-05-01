@@ -1,0 +1,49 @@
+Count Module: 
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 18.03.2025 15:18:09
+// Design Name: 
+// Module Name: LFSR_count_module
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module LFSR_count_module(
+    input wire clk,            // Clock signal
+    input wire reset,          // Active-high asynchronous reset
+    input wire msb,            // MSB from the LFSR output
+    input wire max_tick_reg,   // Max tick from LFSR module
+    output reg [31:0] count_1, // Count of MSB = 1
+    output reg [31:0] count_0  // Count of MSB = 0
+);
+
+    // Asynchronous reset and counting
+    always @(posedge clk or posedge reset or posedge max_tick_reg) begin
+        if (reset || max_tick_reg) begin
+            // Reset the counters when reset is high or max_tick_reg is high
+            count_1 <= 0;
+            count_0 <= 0;
+        end else begin
+            // Update the MSB counters based on the MSB value
+            if (msb) begin
+                count_1 <= count_1 + 1; // Increment count of 1s
+            end else begin
+                count_0 <= count_0 + 1; // Increment count of 0s
+            end
+        end
+    end
+
+endmodule
