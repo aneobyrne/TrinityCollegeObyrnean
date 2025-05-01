@@ -1,0 +1,44 @@
+Your shortest-job first preemptive scheduler scenario has four processes P1,P2,P3,P4
+
+ P1 - arrival:0 burst:6
+ P2 - arrival:1 burst:2
+ P3 - arrival:2 burst:8
+ P4 - arrival:3 burst:4
+
+Your filesystem scenario has:
+  3 processes: P1 P2 P3
+  4 write buffers: wbuf1(17) wbuf2(19) wbuf3(23) wbuf4(29)
+    -- initial contents in parentheses
+  5 read buffers: rbuf1 rbuf2 rbuf3 rbuf4 rbuf5
+  Unlimited inodes, numbered from 0 upwards
+    -- inode 0 represents the (empty) filesystem root
+  Unlimited file-descriptors, numbered from 0 upwards
+    -- 0,1,2 are NOT reserved for stdin,stdout,stderr
+  Unlimited data-blocks, numbered from 0 upwards
+
+Your file-system scenario is:
+
+ fd3 = open("f2",w);  	// P2 : Opens file f2 in write mode (w) and assigns to the descriptor fd3
+ fd4 = open("f3",w);  	// P3 : Opens file f3 in write mode (w) and assigns to the descriptor fd4
+ write(fd3,wbuf2);    	// P2 : Writes data from wbuf2 to the file of fd3(f2)
+ write(fd3,wbuf3);    	// P2 : Writes data from wbuf3 to the file of fd3(f2)
+ close(fd3);           	// P2 : Closes file in fd3 (f2)
+ fd1 = open("f1",w);  	// P1 : Opens file f1 in write mode (w) and assigns to the descriptor fd1
+ write(fd4,wbuf1);    	// P3 : Writes data from wbuf1 to the file of fd4(f3)
+ write(fd4,wbuf4);    	// P3 : Writes data from wbuf4 to the file of fd4(f3)
+ write(fd1,wbuf1);    	// P1 : Writes data from wbuf1 to the file of fd1(f1)
+ close(fd1);          	// P1 : Closes file in fd1 (f1)
+ fd2 = open("f1",r);  	// P1 : Reopens file f1 in read mode (r) and assigns to the descriptor fd2
+ fd3 = open("f2",r);  	// P2 : Reopens file f2 in read mode (r) and assigns to the descriptor fd3
+ read(fd3,rbuf2);     	// P2 : Reads data from file in fd3(f2) into rbuf2
+ read(fd3,rbuf3);     	// P2 : Reads data from file in fd3(f2) into rbuf3
+ read(fd2,rbuf1);     	// P1 : Reads data from file in fd2(f1) into rbuf1
+ close(fd4);          	// P3 : Closes file in fd4 (f3)
+ close(fd2);    	      // P1 : Closes file in fd2 (f1)
+ close(fd3);          	// P2 : Closes file in fd3 (f2)
+ fd5 = open("f3",r);  	// P3 : Reopens file f3 in read mode (r) and assigns to the descriptor fd5
+ fd6 = open("f3",r);  	// P3 : Reopens file f3 in read mode (r) and assigns to the descriptor fd6
+ read(fd5,rbuf4);  	    // P3 : Reads data from file in fd5(f3) into rbuf4
+ read(fd6,rbuf5);      	// P3 : Reads data from file in fd6(f3) into rbuf5
+ close(fd5);    	      // P3 : Closes file in fd5 (f3)
+ close(fd6);          	// P3 : Closes file in fd6 (f3)
