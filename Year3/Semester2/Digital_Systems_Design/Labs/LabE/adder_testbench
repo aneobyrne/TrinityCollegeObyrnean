@@ -1,0 +1,52 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// College: Trinity College Dublin
+// Engineer: Ane O'Byrne
+// Create Date: 25.02.2025 10:43:57
+// Design Name: 6 Bit Adder Testbench
+// Module Name: adder_testbench
+// Project Name: LabE
+// Target Devices: Basys3
+// Description: Apply test input values to  ALU and verify that it behaves correctly
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module adder_testbench;
+    reg [5:0] x, y;
+    reg sel;
+    wire overflow, c_out;
+    wire [5:0] sum;
+    
+     six_bit_ripple_adder uut (
+        .x(x), 
+        .y(y), 
+        .sel(sel), 
+        .overflow(overflow), 
+        .c_out(c_out), 
+        .sum(sum)
+    );
+    
+    initial begin
+      $monitor("Time=%0t x=%b y=%b sel=%b | sum=%b overflow=%b c_out=%b", $time, x, y, sel, sum, overflow, c_out);
+    end
+    
+    //Test cases:
+    initial begin
+        // Initialize inputs
+        x = 6'b000000; y = 6'b000000; sel = 0;
+        
+        // Apply test cases
+        #10 x = 6'b000101; y = 6'b000011; sel = 0;  // 5 + 3 = 8
+        #10 x = 6'b111110; y = 6'b000001; sel = 0;  // -2 + 1 = -1 (two's complement)
+        #10 x = 6'b011111; y = 6'b000001; sel = 0;  // 31 + 1 = 32 (overflow)
+        #10 x = 6'b000110; y = 6'b000011; sel = 1;  // 6 - 3 = 3 (using sel for subtraction)
+        #10 x = 6'b000001; y = 6'b000010; sel = 1;  // 1 - 2 = -1 (two's complement)
+        #10 x = 6'b100000; y = 6'b000001; sel = 1;  // -32 - 1 = -33 (overflow case)
+        #10 x = 6'b000001; y = 6'b100001; sel = 1; // 1 -(-31) = 32
+        
+        #10 $finish;
+    end
+    
+    
+
+endmodule
