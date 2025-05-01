@@ -1,0 +1,50 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: Trinity College Dublin
+// Engineer: Ane O'Byrne
+// 
+// Create Date: 29.03.2025 12:50:00
+// Design Name: Assignment 2
+// Module Name: Top_lvl_module
+// Project Name: Top Level Module 
+// Target Devices: Basys 3
+// Description: Connect Count module with LFSR
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+module Top_lvl_module(
+    input wire clk,               // Clock signal
+    input wire reset,             // Active-high asynchronous reset
+    output wire max_tick_reg,   // Max tick from LFSR module
+    output wire detected,         // High when "010111" sequence is detected
+    output wire [22:0] lfsr_out,  // 23-bit LFSR output
+    output wire [15:0] count      // Counter for number of detections
+);
+
+    // Internal signals
+    wire lfsr_bit;            // LSB of LFSR output (connected to FSM input)
+
+    // Instantiate the LFSR module
+    LFSR_module lfsr_inst (
+        .clk(clk),
+        .reset(reset),
+        .lfsr_out(lfsr_out),  // 23-bit LFSR output
+        .max_tick_reg(max_tick_reg)        
+    );
+    
+    // Connect the LSB of LFSR to the FSM
+    assign lfsr_bit = lfsr_out[0]; // Use LSB of LFSR output
+
+      // Instantiate the FSM module
+    FSM_module fsm_inst (
+        .clk(clk),
+        .reset(reset),
+        .max_tick_reg(max_tick_reg),
+        .lfsr_bit(lfsr_bit),  // Connect LSB of LFSR
+        .detected(detected),  // High when sequence detected
+        .count(count)         // Counter output
+    );
+
+endmodule
