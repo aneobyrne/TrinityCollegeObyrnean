@@ -1,0 +1,47 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// College: Trinity College Dublin
+// Engineer: Ane O'Byrne
+// Create Date: 18.02.2025 17:17:57
+// Design Name: Top Level ALU module
+// Module Name: top_lvl_alu_module
+// Project Name: Assignment1
+// Target Devices: Basys3
+// Description: Instantiate the previously created modules (Ripple Adder, Negation, Comparator, XNOR, Multiplexer)
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module top_lvl_alu_module(
+    input [5:0] A, B, 
+    input [2:0] fxn, 
+    output [5:0] out,
+    output reg overflow);
+    wire [5:0] add_out, sub_out, negation_A, negation_B, A_less_than_B, xnor_out;
+    wire add_overflow, sub_overflow;
+    
+    // Modules for each operation: 
+    negation_module neg_A_inst (.A(A), .negation_out(negation_A)); //A -> -A
+    negation_module neg_B_inst (.A(B), .negation_out(negation_B)); //B -> -B
+    comparator_module cmp_inst (.A(A), .B(B), .A_less_than_B(A_less_than_B)); //A < B
+    xnor_module xnor_inst (.A(A), .B(B), .xnor_out(xnor_out)); //A XNOR B
+    ripple_adder_module add_inst (.x(A), .y(B), .sel(1'b0), .overflow(add_overflow), .c_out(), .sum(add_out)); // A + B
+    ripple_adder_module sub_inst (.x(A), .y(B), .sel(1'b1), .overflow(sub_overflow), .c_out(), .sum(sub_out)); // A - B
+    // Multiplexer to select output based on fxn
+    multiplexer multiplex_inst (.A(A), 
+                                .B(B), 
+                                .negation_A(negation_A), 
+                                .negation_B(negation_B), 
+                                .A_less_than_B(A_less_than_B), 
+                                .xnor_out(xnor_out), 
+                                .add_out(add_out), 
+                                .sub_out(sub_out), 
+                                .fxn(fxn), .out(out));
+                                
+    // **Set overflow to 0 by default, update it for addition/subtraction**
+    always @(*) begin
+        overflow = 0; // Default value
+        if (fxn == 3'b110) overflow = add_overflow; // Update only for A + B
+        if (fxn == 3'b111) overflow = sub_overflow; // Update only for A - B
+    end
+    
+endmodule
