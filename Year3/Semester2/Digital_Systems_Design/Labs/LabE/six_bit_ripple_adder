@@ -1,0 +1,34 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// College: Trinity College Dublin
+// Engineer: Ane O'Byrne
+// Create Date: 18.02.2025 17:17:57
+// Design Name: Six Bit Ripple Adder Module
+// Module Name: six_bit_ripple_adder
+// Project Name: LabE
+// Target Devices: Basys3
+// Description: 6-bit ripple adder module for arithmetic operations A+B and A-B
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module six_bit_ripple_adder(
+    input [5:0] x, y,
+    input sel,
+    output overflow, c_out,
+    output [5:0]sum
+    );
+    wire [5:0] y_modified;
+    wire c0,c1,c2,c3,c4,c5;
+    
+    // If sel is 1, flip the bits of y, otherwise pass y as is
+    assign y_modified = sel ? ~y : y;
+    
+    FullAdder bit0 (x[0], y_modified[0], sel, sum[0], c0);
+    FullAdder bit1 (x[1], y_modified[1], c0, sum[1], c1);
+    FullAdder bit2 (x[2], y_modified[2], c1, sum[2], c2);
+    FullAdder bit3 (x[3], y_modified[3], c2, sum[3], c3);
+    FullAdder bit4 (x[4], y_modified[4], c3, sum[4], c4);
+    FullAdder bit5 (x[5], y_modified[5], c4, sum[5], c5);
+    assign overflow = ((!c4 && c5) || (c4 && !c5))? 1'b1: 1'b0;
+    assign c_out = c5;
+endmodule
