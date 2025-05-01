@@ -9,14 +9,9 @@
 4. **Error Simulation** - Enables fault testing and diagnostics.
 5. **Rover Discovery** - Searches for nearby rovers to establish connections.
 
-## 🛠️ Features
+## Features
 - **Real-Time Command Execution** 
 - **Secure & Reliable Communication** 
 - **Telemetry & Sensor Data Streaming** 
 - **Fault Injection for Resilience Testing** ⚠
 - **Autonomous Rover Discovery** 
-
-## Folder and Files
-- **GUI**: GUI section (not on use anymore)
-- **Extra files**: Files used along the project (not on use anymore)
-- **Provisional**: LunarRover04.py 
