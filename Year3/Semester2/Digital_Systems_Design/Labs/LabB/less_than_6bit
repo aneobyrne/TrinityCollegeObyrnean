@@ -1,0 +1,24 @@
+`timescale 1ns / 1ps
+
+module less_than_6bit (
+    input wire [5:0] a, b,  // 6-bit inputs
+    output wire a_lt_b      // Output for A < B
+);
+
+    wire a_ge_b;  // Wire to hold A >= B result
+
+    // Zero-extend 6-bit numbers to 8-bit by adding leading 0s
+    wire [7:0] a_ext = {2'b00, a};
+    wire [7:0] b_ext = {2'b00, b};
+
+    // Instantiate the 8-bit greater than or equal module
+    greater_than_or_equal_8bit ge8_inst (
+        .a(a_ext),
+        .b(b_ext),
+        .a_ge_b(a_ge_b)
+    );
+
+    // A < B is the complement of A >= B
+    assign a_lt_b = ~a_ge_b;
+
+endmodule
