@@ -1,0 +1,16 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// College: Trinity College Dublin
+// Engineer: Ane O'Byrne
+// Create Date: 18.02.2025 17:17:57
+// Design Name: Comparator Module
+// Module Name: comparator_module
+// Project Name: Assignment1
+// Target Devices: Basys3
+// Description: Compare two 6-bits and output 1 for A<B, and 0 otherwise
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module comparator_module(input [5:0] A, B, output A_less_than_B);
+    assign A_less_than_B = (A < B);  // Less than comparison
+endmodule
