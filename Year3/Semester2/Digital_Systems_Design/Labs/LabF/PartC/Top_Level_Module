@@ -1,0 +1,50 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 18.03.2025 15:22:10
+// Design Name: 
+// Module Name: Top_Level_Module
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module Top_Level_Module(
+    input wire clk,
+    input wire reset,
+    output wire [15:0] lfsr_out,
+    output wire max_tick_reg,
+    output wire [31:0] count_1,
+    output wire [31:0] count_0
+);
+
+    // Instantiate the LFSR module
+    LFSR_module lfsr_inst (
+        .clk(clk),
+        .reset(reset),
+        .lfsr_out(lfsr_out),
+        .max_tick_reg(max_tick_reg)
+    );
+
+    // Instantiate the LFSR Counting Module
+    LFSR_count_module counter_inst (
+        .clk(clk),
+        .reset(reset),
+        .msb(lfsr_out[15]), // MSB from LFSR output
+        .max_tick_reg(max_tick_reg),
+        .count_1(count_1),
+        .count_0(count_0)
+    );
+
+endmodule
