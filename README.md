@@ -1,4 +1,4 @@
-# Computer Engineering Portfolio – Trinity College Dublin
+# Computer Engineering Study – Trinity College Dublin
 
 ## About Me (obyrnean)
 
