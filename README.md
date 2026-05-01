@@ -19,7 +19,7 @@ All work here is my own unless stated otherwise. Some group projects are credite
 
 - Languages: C, C++, Assembly (ARM), Python, MATLAB, Verilog, HTML, CSS, JavaScript.
 - Platforms: Arduino, Raspberry Pi Pico, Basys 3 FPGA.
-- Tools: Visual Studio Code, Vivado, Processing, Makefiles, Git/GitLab/GitHub.
+- Tools: Visual Studio Code, Vivado, Processing, Makefiles, Git/GitLab/GitHub, Unity, Blender.
 
 ---
 
