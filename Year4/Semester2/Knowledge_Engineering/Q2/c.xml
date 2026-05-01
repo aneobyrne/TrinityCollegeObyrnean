@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:prod="http://example.org/production#">
+
+  <!-- Actor instance (1) -->
+  <rdf:Description rdf:about="prod:Actor_ZacEfron">
+    
+    <prod:hasName>Zac Efron</prod:hasName>
+    <prod:hasAge rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">
+      30
+    </prod:hasAge>
+
+    <!-- Relationship (object property) -->
+    <prod:playsCharacter rdf:resource="prod:Character_PhillipCarlyle"/>
+
+    <!-- participates in song -->
+    <prod:performsIn rdf:resource="prod:Song_TheOtherSide"/>
+
+  </rdf:Description>
+
+
+  <!-- Character instance (1) -->
+  <rdf:Description rdf:about="prod:Character_PhillipCarlyle">
+    <prod:hasName>Phillip Carlyle</prod:hasName>
+  </rdf:Description>
+
+<!-- Actor instance (2) -->
+  <rdf:Description rdf:about="prod:Actor_ZacEfron">
+    
+    <prod:hasName>Hugh Jackman</prod:hasName>
+    <prod:hasAge rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">
+      49
+    </prod:hasAge>
+
+    <!-- Relationship (object property) -->
+    <prod:playsCharacter rdf:resource="prod:Character_PTBarnum"/>
+
+    <!-- participates in song -->
+    <prod:performsIn rdf:resource="prod:Song_TheOtherSide"/>
+
+  </rdf:Description>
+
+
+  <!-- Character instance (2) -->
+  <rdf:Description rdf:about="prod:Character_PTBarnum">
+    <prod:hasName>P.T. Barnum</prod:hasName>
+  </rdf:Description>
+
+
+  <!-- Scene instance -->
+  <rdf:Description rdf:about="prod:Scene_1">
+
+    <prod:hasTitle>Bar Scene</prod:hasTitle>
+
+    <!-- Scene contains song -->
+    <prod:hasSong rdf:resource="prod:Song_TheOtherSide"/>
+
+  </rdf:Description>
+
+
+  <!-- Song instance -->
+  <rdf:Description rdf:about="prod:Song_TheOtherSide">
+    <prod:hasTitle>The Other Side</prod:hasTitle>
+    <prod:hasType>duet</prod:hasType>
+  </rdf:Description>
+
+</rdf:RDF>

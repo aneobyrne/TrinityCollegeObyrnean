@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"> <!-- XSD namespace -->
+
+  <!-- Reusable type for duration (mm:ss format) -->
+  <xsd:simpleType name="durationType">
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="\d{2}:\d{2}"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <!-- Root: Production -->
+  <xsd:element name="production">
+    <xsd:complexType> <!-- Contains elements -->
+      <xsd:sequence> <!-- Elements must be in this order -->
+
+        <!-- Actors: -->
+        <xsd:element name="actors">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="actor" maxOccurs="unbounded"> <!-- There can be many actors -->
+                <xsd:complexType>
+                  <xsd:sequence> <!-- Each actor has a name and age as well as plays certain character -->
+                    <xsd:element name="name" type="xsd:string"/>
+                    <xsd:element name="age" type="xsd:integer"/>
+                    <xsd:element name="character" type="xsd:string" minOccurs="1" maxOccurs="unbounded"/>
+                  </xsd:sequence>
+                  <xsd:attribute name="id" type="xsd:ID" use="required"/> <!-- Must have an ID -->
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+
+        <!-- Scenes: -->
+        <xsd:element name="scenes">
+          <xsd:complexType>
+            <xsd:sequence>
+
+              <xsd:element name="scene" maxOccurs="unbounded"> <!-- There can be multiple scenes -->
+                <xsd:complexType>
+                  <xsd:sequence>
+
+                  <!-- Title -->
+                    <xsd:element name="title" type="xsd:string"/> 
+                    <xsd:choice minOccurs="0" maxOccurs="unbounded">
+
+                    <!-- Dialogue -->
+                    <xsd:element name="dialogue" minOccurs="0" maxOccurs="unbounded"> <!-- Optional and no limit of appearance times -->
+                      <xsd:complexType>
+                        <xsd:sequence>
+                          <xsd:element name="line" maxOccurs="unbounded"> <!-- A dialogue can have many lines -->
+                            <xsd:complexType mixed="true"> <!-- Element contains both text AND attribute -->
+                              <xsd:attribute name="character" type="xsd:IDREF" use="required"/> 
+                            </xsd:complexType>
+                          </xsd:element>
+                        </xsd:sequence>
+                      </xsd:complexType>
+                    </xsd:element>
+
+                    <!-- Songs -->
+                    <xsd:element name="song" minOccurs="0" maxOccurs="unbounded"> <!-- Optional and multiple -->
+                      <xsd:complexType>
+                        <xsd:sequence>
+                              <xsd:element name="title" type="xsd:string"/>
+
+                          <!-- Lyrics -->
+                          <xsd:element name="lyrics" minOccurs="0">
+                            <xsd:complexType>
+                              <xsd:sequence>
+                                <xsd:element name="line" maxOccurs="unbounded">
+                                  <xsd:complexType mixed="true">
+                                    <xsd:attribute name="character" type="xsd:IDREF"/>
+                                  </xsd:complexType>
+                                </xsd:element>
+                              </xsd:sequence>
+                            </xsd:complexType>
+                          </xsd:element>
+
+                        </xsd:sequence>
+
+                        <!-- Song attributes -->
+                        <xsd:attribute name="duration" type="durationType"/>
+
+                        <!-- Enumerated type for song type -->
+                        <xsd:attribute name="type">
+                          <xsd:simpleType>
+                            <xsd:restriction base="xsd:string">
+                              <xsd:enumeration value="solo"/>
+                              <xsd:enumeration value="duet"/>
+                              <xsd:enumeration value="chorus"/>
+                            </xsd:restriction>
+                          </xsd:simpleType>
+                        </xsd:attribute>
+
+                      </xsd:complexType>
+                    </xsd:element>
+
+                    <!-- Stage directions -->
+                    <xsd:element name="direction" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/> <!-- Optional extra scene instructions -->
+
+                   </xsd:choice>
+
+                  </xsd:sequence>
+
+                  <!-- Scene attributes: Number (required) and Location (optional) -->
+                  <xsd:attribute name="number" type="xsd:integer" use="required"/>
+                  <xsd:attribute name="location" type="xsd:string"/>
+
+                </xsd:complexType>
+              </xsd:element>
+
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+
+      </xsd:sequence>
+
+      <!-- Production attributes -->
+      <xsd:attribute name="title" type="xsd:string" use="required"/>
+      <xsd:attribute name="date" type="xsd:date"/>
+
+    </xsd:complexType>
+  </xsd:element>
+
+</xsd:schema>

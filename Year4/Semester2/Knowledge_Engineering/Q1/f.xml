@@ -1,0 +1,25 @@
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+
+  <xsl:output method="html"/>
+
+  <xsl:template match="/">
+    <html>
+      <body>
+        <h2>Musical Song Titles</h2>
+        <ul>
+
+          <!-- Correct selection of titles anywhere in document -->
+          <xsl:for-each select="//title">
+
+            <li>
+              <xsl:value-of select="."/>
+            </li>
+
+          </xsl:for-each>
+
+        </ul>
+      </body>
+    </html>
+  </xsl:template>
+
+</xsl:stylesheet>

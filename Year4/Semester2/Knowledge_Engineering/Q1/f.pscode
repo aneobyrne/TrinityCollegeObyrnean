@@ -1,0 +1,38 @@
+function handleURLRequest(request): # URL -> http://your.server.net/?f=myfile.xml&q=xpath&t=transform.xslt
+    
+    # Step 1: Extract wanted parameters from the provided URL 
+    fileName = request.getParam("f") # f=myfile.xml
+    xpathQuery = request.getParam("q") # q=xpath= //scene/song/title
+    transformFile = request.getParam("t") # New t=transform.xslt
+
+    # Step 2: Validate input (check required data was sent by user)
+    if fileName is NULL or xpathQuery is NULL: 
+        return HTTPResponse("Missing Parameters", 400)
+
+    # Step 3: Load XML file (open and read XML file)
+    xmlFile = XMLParser.load(fileName)
+    if xmlFile is NULL: # Check if file exists
+        return HTTPResponse("File not found", 404)
+
+    # Step 4: Evaluate XPath (search for the song in XML tree to find matching nodes)
+    try:
+        resultNodes = XPathEngine.evaluate(xmlFile, xpathQuery)
+    except XPathError:
+        return HTTPResponse("Invalid XPath expression", 400)
+
+    # Step 5: Handle empty results 
+    if resultNodes is empty:
+        return HTTPResponse("No matching results", 204)
+    
+    # New Step: Apply XSLT if provided
+    if xsltFile is NOT NULL:
+        xslt = XSLTProcessor.load(xsltFile)
+        transformedOutput = XSLTProcessor.apply(xslt, resultNodes)
+        output = transformedOutput
+    else:
+    
+    # Step 6: Format result (Snippet for browser to read)
+        output = serialize(resultNodes)
+
+    # Step 7: Return HTTP response to browser
+    return HTTPResponse(output, 200)

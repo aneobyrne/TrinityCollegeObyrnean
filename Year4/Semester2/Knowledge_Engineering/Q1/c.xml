@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<production title="The Greatest Showman" date="2026-04-10">
+
+  <!-- Actors -->
+  <actors>
+    <actor id="A1">
+      <name>Hugh Jackman</name>
+      <age>49</age>
+      <character>P.T. Barnum</character>
+    </actor>
+
+    <actor id="A2">
+      <name>Zac Efron</name>
+      <age>30</age>
+      <character>Phillip Carlyle</character>
+    </actor>
+
+    <actor id="A3">
+      <name>Michelle Williams</name>
+      <age>37</age>
+      <character>Charity Barnum</character>
+    </actor>
+
+    <actor id="A4">
+      <name>Zendaya</name>
+      <age>21</age>
+      <character>Anne Wheeler</character>
+    </actor>
+
+    <actor id="A5">
+      <name>Keala Settle</name>
+      <age>42</age>
+      <character>Lettie Lutz</character>
+    </actor>
+  </actors>
+
+  <!-- Scenes -->
+  <scenes>
+
+    <!-- Scene 1: Circus Opening -->
+    <scene number="1" location="Circus Tent">
+      <title>Welcome to the Circus</title>
+
+      <direction>Lights dim, drumroll begins, curtains rise</direction>
+
+      <dialogue>
+        <line character="A1">Ladies and gentlemen, welcome to the circus!</line>
+      </dialogue>
+
+      <direction>Circus performers enter, crowd cheers</direction>
+
+      <song duration="05:02" type="chorus">
+        <title>The Greatest Show</title>
+
+        <lyrics>
+          <line character="A1">It's everything you ever want</line>
+          <line character="A5">It's everything you ever need</line>
+          <line character="A2">And it's here right in front of you</line>
+          <line character="A4">This is where you wanna be</line>
+          <line character="A1">This is the greatest show!</line>
+        </lyrics>
+      </song>
+
+    </scene>
+
+    <!-- Scene 2: Home -->
+    <scene number="2" location="Barnum House">
+      <title>A Million Dreams</title>
+
+      <direction>Soft lighting, Barnum and Charity sit together</direction>
+
+      <song duration="04:29" type="duet">
+        <title>A Million Dreams</title>
+
+        <lyrics>
+          <line character="A1">I close my eyes and I can see</line>
+          <line character="A3">The world that's waiting up for me</line>
+          <line character="A1">That I call my own</line>
+          <line character="A3">Through the dark, through the door</line>
+        </lyrics>
+      </song>
+
+    </scene>
+
+    <!-- Scene 3: Museum Idea -->
+    <scene number="3" location="Barnum Museum">
+      <title>The Big Idea</title>
+
+      <direction>Empty museum hall, echoing footsteps</direction>
+
+      <dialogue>
+        <line character="A1">I want to buy this museum and fill it with wonder</line>
+        <line character="A3">Is it going well, or are we risking too much?</line>
+        <line character="A1">No... I have a better idea</line>
+        <line character="A1">We bring together the most unique people</line>
+      </dialogue>
+
+      <direction>Posters are placed, performers gather</direction>
+
+    </scene>
+
+    <!-- Scene 4: The Bar -->
+    <scene number="4" location="Bar">
+      <title>The Other Side</title>
+
+      <direction>Barnum offers a drink, lively bar atmosphere</direction>
+
+      <song duration="03:34" type="duet">
+        <title>The Other Side</title>
+
+        <lyrics>
+          <line character="A1">You don't need to run, I know what you're thinking</line>
+          <line character="A2">You can take your time</line>
+          <line character="A1">Something happens when I talk to you</line>
+          <line character="A2">I like the way you think</line>
+        </lyrics>
+      </song>
+
+      <direction>Bottle passes between them, crowd watches</direction>
+
+      <dialogue>
+        <line character="A2">Okay… I’ll join you</line>
+      </dialogue>
+
+    </scene>
+
+  </scenes>
+
+</production>

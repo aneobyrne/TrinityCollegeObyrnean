@@ -1,0 +1,17 @@
+# 1. Basic node selection (getting all song titles)
+/production/scenes/scene/song/title
+
+# 2. Wildcard selection (get all children of scene)
+/production/scenes/scene/*
+
+# 3. Predicate (get "A Million Dreams" titled song elements)
+/production/scenes/scene/song[title = "A Million Dreams"]
+
+# 4. Attribute selection (get all actors IDs)
+/production/actors/actor/@id 
+
+# 5. Attribute-based filtering (get scenes located in "Barnum House")
+/production/scenes/scene[@location = "Barnum House"]
+
+# 6. Descendant axis (get all dialogue and lyric lines in the whole XML)
+//line
