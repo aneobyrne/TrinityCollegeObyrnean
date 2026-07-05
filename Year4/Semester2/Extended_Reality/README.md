@@ -48,4 +48,4 @@ This repository includes several individual assignments that demonstrate differe
 
 - **3D Object Scanning:** Capturing a real-world object, converting it into a 3D model, and visualising it within both AR and VR environments.
 - **Hand Interaction:** Creating an application that allows users to grab, pinch, and move virtual objects using hand-tracking interactions.
-- **Team Project:** A larger collaborative XR project that combines the concepts learned throughout the module. Additional information can be found in the link: 
+- **Team Project:** A larger collaborative XR project that combines the concepts learned throughout the module. Additional information can be found in the link: [AR_ChessGame_Group7](https://github.com/obyrnean/ARBoardGames_Group7)
