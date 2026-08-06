@@ -28,3 +28,6 @@ Throughout the module, I learned and practiced:
 - NumPy
 - Pandas
 - Matplotlib
+
+## Collab (Google Drive)
+Link to full projects: [Collab Link](https://drive.google.com/drive/folders/15CwZxtF6F20NYJnYweCDKpZuY7SrI0lG?usp=sharing)
